@@ -17,7 +17,7 @@
 #       Configuration as arcrest.manageorg.ItemParameter() object
 #
 #   Created by:  NPS Inventory and Monitoring Division Staff
-#   Update date: 20161017
+#   Update date: 20161019
 #
 #
 #
@@ -30,25 +30,22 @@ class ServiceConfiguration(object):
     '''
     INFO
     ----
-    Configuration object (ItemParameter) used to manage a feature service in
+    Configuration object (ItemParameter) used to manage a service in
     ArcGIS Online (AGOL)
 
     '''
-    serviceConfig = {}
+    itemParams = None
+    #serviceConfig = {}
 
-    def __init__(self, itype, title, description, url, overwrite="True", tags="National Park Service, NPS, NPS Inventory and Monitoring"):
-        itemParams = arcrest.manageorg.ItemParameter()
-        itemParams.type = itype
-        itemParams.title = title
-        itemParams.description = description
-        itemParams.tags = tags
-        itemParams.overwrite = overwrite
+    def __init__(self, itype, title, description, url, overwrite=True, tags="National Park Service, NPS, NPS Inventory and Monitoring"):
+        self.itemParams = arcrest.manageorg.ItemParameter()
+        self.itemParams.type = itype
+        self.itemParams.url = url # required in itemParameters if posting a map service
+        self.itemParams.title = title
+        self.itemParams.description = description
+        self.itemParams.tags = tags
+        self.itemParams.overwrite = overwrite
         #print type(itemParams)
 
-        ip = str(itemParams)
-        print ip
-        self.serviceConfig["itemParameters"] = (ip.replace("'{","{")).replace("}'","}")
-        self.serviceConfig["url"] = url
-        self.serviceConfig["overwrite"] = overwrite
-        self.serviceConfig["serviceProxyParams"] = ""
-        self.serviceConfig["metadata"] = ""
+        # 20161019: addItem lacks a metadata parameter
+        #self.serviceConfig["metadata"] = ""
