@@ -63,6 +63,10 @@ if __name__=='__main__':
     print serviceInfo
     content = admin.content
     userInfo = content.users.user()
+    for folder in userInfo.folders:
+        if folder['title'] == 'NPS_NaturalResource_Inventories':
+            targetFolder = folder['id']
+    #targetFolder = userInfo.folders
     # Code below posts via ArcRest generic technique - guessing this works when hitting AGS - does not work when hitting AGOL but
     # active adminURL response returns a list of every service on the server... so it is getting somewhere
     # see http://gis.stackexchange.com/questions/178127/arcgis-rest-api-using-additem-with-secure-service for info
@@ -83,7 +87,7 @@ if __name__=='__main__':
     itemParams.title = "IMD Test"
     itemParams.description = "Test"
     itemParams.tags = "NPS"
-    itemParams.overwrite = "True"
+    itemParams.overwrite = True
     #print type(itemParams)
 
     ip = str(itemParams)
@@ -96,7 +100,8 @@ if __name__=='__main__':
     serviceConfig["metadata"] = ""
     #item = userInfo.addItem(serviceInfo)
     print str(serviceConfig).replace("'", '\"')
-    item = userInfo.addItem(itemParameters=itemParams,url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer", overwrite=True)
+    # This direct request works although the overwrite and folder params are ignored
+    item = userInfo.addItem(itemParameters=itemParams,url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer", overwrite=True, folder=targetFolder)
     #item = userInfo.addItem(str(serviceConfig).replace("'", '\"'))
     print item.title
 
