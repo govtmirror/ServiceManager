@@ -28,11 +28,11 @@
 import urllib
 import urllib2
 import arcrest
-import TokenManager
+#import TokenManager
 from TokenManager import TokenManager
-import ServiceConfiguration
+#import ServiceConfiguration
 from ServiceConfiguration import ServiceConfiguration
-import ServiceSource
+#import ServiceSource
 from ServiceSource import ServiceSource
 
 class ServiceManager(object):
@@ -64,12 +64,21 @@ if __name__=='__main__':
     serviceToken = sm.token
     admin = sm.admin
     print serviceToken
-    itemParameters = sm.getConfiguration(itype="Map Service", title="IMD Test Service", description="Updated description", url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer")
+    content = admin.content
+    userInfo = content.users.user()
+
+    ss = ServiceSource()
+    ss.agsConnection("https://inp2300fcvhafo1", "arcgis_admin", "admin2016...")
+    ss.sourceList = ss.getAGSSources(ss.agsServer, "Inventory_Geology")
+
+    # TODO: iterate sourceList
+    itemParameters = sm.getConfiguration(itype="Map Service", title=ss.sourceList['serviceName'][0]
+                    , description=ss.sourceList['description'][0]
+                    , url=ss.sourceList['serviceURL'][0])
+    #itemParameters = sm.getConfiguration(itype="Map Service", title="IMD Test Service", description="Updated description", url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer")
     #itemParameters = sm.serviceConfiguration
     print str(itemParameters)
     #url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer"
-    content = admin.content
-    userInfo = content.users.user()
 
     # This direct request works although the overwrite and folder params are ignored
     item = userInfo.addItem(itemParameters=itemParameters, overwrite=True)

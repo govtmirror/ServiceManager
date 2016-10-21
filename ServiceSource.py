@@ -132,31 +132,31 @@ class ServiceSource(object):
 ##                  "logicOperator": "null",
 ##                  "referenceType":  referenceType}]
 ##                  }
-                  json = {"units": [{
-                  "order": 0,
-                  "logicOperator": "null",
-                  "unitCode": unitCode,
-                  "linked": "true",
-                  "approved": "false"}],
-                  "referenceTypes": [{
-                  "order": 0,
-                  "logicOperator": "null",
-                  "referenceType":  referenceType}],
-                  "digitalResources": [{
-                  "order": 0,
-                  "logicOperator": "null",
-                  "type": "WebService",
-                  "fieldName": "Map",
-                  "searchText": "Inventory_Geology"}]
-                  }
+              json = {"units": [{
+              "order": 0,
+              "logicOperator": "null",
+              "unitCode": unitCode,
+              "linked": "true",
+              "approved": "false"}],
+              "referenceTypes": [{
+              "order": 0,
+              "logicOperator": "null",
+              "referenceType":  referenceType}],
+              "digitalResources": [{
+              "order": 0,
+              "logicOperator": "null",
+              "type": "WebService",
+              "fieldName": "Map",
+              "searchText": "Inventory_Geology"}]
+              }
         return json
 
     def getAGSSources(self, server, folder):
         services = dict()
         for sFolder in server.folders:
-            print sFolder
             server.currentFolder = sFolder
             if sFolder == folder:
+                print sFolder
                 services = dict(serviceName = [item.documentInfo['Title'] for item in server.services]
                 , description = [item.description for item in server.services]
                 , serviceURL = [item.url.replace('inp2300fcvhafo1:6080','irmaservices.nps.gov') for item in server.services])
