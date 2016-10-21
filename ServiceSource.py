@@ -40,6 +40,7 @@ class ServiceSource(object):
     '''
     serviceSources = {}
     sourceList = [] # array of source identifiers
+    sourceFilter = None
     basicAGSQuery = None
     token = None
     agsServer = None
@@ -48,12 +49,12 @@ class ServiceSource(object):
         # Connect to sourceLocation
         # Example: https://irmaservices.nps.gov/datastore-secure/v4/rest/AdvancedSearch
         #sourceFilter = {}
-        sourceFilter = {'units': [{
-              "order": '0',
-              "logicOperator": 'null',
-              "unitCode": "GRKO",
-              "linked": 'true',
-              "approved": 'false'}]}
+        self.sourceFilter = {"units": [{
+              "order": 0,
+              "logicOperator": "null",
+              "unitCode": "GRI",
+              "linked": "true",
+              "approved": "false"}]}
 ##        units = {'units': [{
 ##              "order": '0',
 ##              "logicOperator": 'null',
@@ -111,6 +112,45 @@ class ServiceSource(object):
         self.token = tm.token
         self.agsServer = tm.admin
 
+    def dsscConnection(self, unitCode, referenceType=None):
+        if referenceType is None:
+            json = {"units": [{
+                  "order": 0,
+                  "logicOperator": "null",
+                  "unitCode": unitCode,
+                  "linked": "true",
+                  "approved": "false"}]}
+        else:
+##            json = {"units": [{
+##                  "order": 0,
+##                  "logicOperator": "null",
+##                  "unitCode": unitCode,
+##                  "linked": "true",
+##                  "approved": "false"}],
+##                  "referenceTypes": [{
+##                  "order": 0,
+##                  "logicOperator": "null",
+##                  "referenceType":  referenceType}]
+##                  }
+                  json = {"units": [{
+                  "order": 0,
+                  "logicOperator": "null",
+                  "unitCode": unitCode,
+                  "linked": "true",
+                  "approved": "false"}],
+                  "referenceTypes": [{
+                  "order": 0,
+                  "logicOperator": "null",
+                  "referenceType":  referenceType}],
+                  "digitalResources": [{
+                  "order": 0,
+                  "logicOperator": "null",
+                  "type": "WebService",
+                  "fieldName": "Map",
+                  "searchText": "Inventory_Geology"}]
+                  }
+        return json
+
     def getAGSSources(self, server, folder):
         services = dict()
         for sFolder in server.folders:
@@ -128,16 +168,29 @@ class ServiceSource(object):
 
         return services
 
-    def getDSSCSources(self):
-        pass
+    def getDSSCSources(self, sourceLocation):
+        reqURL = sourceLocation
+        # Request sources using filter
+        print reqURL
+        print str(self.sourceFilter)
 
-
+        data = json.dumps(self.sourceFilter)
+        req = urllib2.Request(sourceLocation, data, {'Content-Type':'application/json'})
+        resp = urllib2.urlopen(req)
+        a = json.loads(resp.read())
+        print len(a['items'])
+        print [item['referenceId'] for item in a['items']]
+        return [item['referenceId'] for item in a['items']]
 
 if __name__=='__main__':
     # Service source: AGS REST using arcrest security handler logic
-    ss = ServiceSource()
-    ss.agsConnection("https://inp2300fcvhafo1", "arcgis_admin", "admin2016...")
-    ss.sourceList = ss.getAGSSources(ss.agsServer, "Inventory_Geology")
-    print ss.sourceList
+    #ss = ServiceSource()
+    #ss.agsConnection("https://inp2300fcvhafo1", "arcgis_admin", "admin2016...")
+    #ss.sourceList = ss.getAGSSources(ss.agsServer, "Inventory_Geology")
+    #print ss.sourceList
+
     # Service source: DS/SC REST
+    ss = ServiceSource()
+    ss.sourceFilter = ss.dsscConnection("GRI", "GeospatialDataset")
+    sourceList = ss.getDSSCSources("http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=2000&format=json")
     #ss = ServiceSource(sourceLocation="http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=1&format=json")
