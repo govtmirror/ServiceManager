@@ -28,6 +28,8 @@
 import json
 import urllib2
 import urllib
+from TokenManager import TokenManager
+#import arcrest
 
 class ServiceSource(object):
     '''
@@ -38,6 +40,9 @@ class ServiceSource(object):
     '''
     serviceSources = {}
     sourceList = [] # array of source identifiers
+    basicAGSQuery = None
+    token = None
+    agsServer = None
 
     def __init__(self, sourceLocation=None, sourceFilter=None):
         # Connect to sourceLocation
@@ -86,21 +91,53 @@ class ServiceSource(object):
         #sourceFilter['referenceTypes'] = referenceTypes
         #sourceFilter['digitalResources'] = [digitalResources]
 
-        reqURL = sourceLocation
-        # Request sources using filter
-        print reqURL
-        print str(sourceFilter)
+##        reqURL = sourceLocation
+##        # Request sources using filter
+##        print reqURL
+##        print str(sourceFilter)
+##
+##        data = urllib.urlencode(sourceFilter)
+##        print data
+##        req = urllib2.Request(sourceLocation, data, {'Accept':'application/json'})
+##        resp = urllib2.urlopen(req)
+##        a = json.loads(resp.read())
+##        print len(a['items'])
+##        print [item['referenceId'] for item in a['items']]
 
-        data = urllib.urlencode(sourceFilter)
-        print data
-        req = urllib2.Request(sourceLocation, data, {'Accept':'application/json'})
-        resp = urllib2.urlopen(req)
-        a = json.loads(resp.read())
-        print len(a['items'])
-        print [item['referenceId'] for item in a['items']]
+    def agsConnection(self, serverURL, agsUser, agsPassword, referer='https://irma.nps.gov'):
+        # Requires an admin connection
+        tm = TokenManager("AGS", serverURL, agsUser, agsPassword, referer)
+        tm.getToken()
+        self.token = tm.token
+        self.agsServer = tm.admin
 
-    def getSources(self):
+    def getAGSSources(self, server, folder):
+        services = dict()
+        for sFolder in server.folders:
+            print sFolder
+            server.currentFolder = sFolder
+            if sFolder == folder:
+                services = dict(serviceName = [item.documentInfo['Title'] for item in server.services]
+                , description = [item.description for item in server.services]
+                , serviceURL = [item.url.replace('inp2300fcvhafo1:6080','irmaservices.nps.gov') for item in server.services])
+
+                #for service in server.services:
+                #    services['serviceName'] = service.documentInfo['Title']
+                #    services['serviceURL'] = service.url.replace('inp2300fcvhafo1:6080','irmaservices.nps.gov')
+                #    services['description'] = service.description
+
+        return services
+
+    def getDSSCSources(self):
         pass
 
+
+
 if __name__=='__main__':
-    ss = ServiceSource(sourceLocation="http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=1&format=json")
+    # Service source: AGS REST using arcrest security handler logic
+    ss = ServiceSource()
+    ss.agsConnection("https://inp2300fcvhafo1", "arcgis_admin", "admin2016...")
+    ss.sourceList = ss.getAGSSources(ss.agsServer, "Inventory_Geology")
+    print ss.sourceList
+    # Service source: DS/SC REST
+    #ss = ServiceSource(sourceLocation="http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=1&format=json")

@@ -22,7 +22,9 @@
 
 import arcrest
 from arcresthelper import securityhandlerhelper
-import SecurityConfiguration
+#from arcrest.security.security import AGSTokenSecurityHandler
+from arcrest.manageags import AGSAdministration
+#import SecurityConfiguration
 #reload(SecurityConfiguration)
 from SecurityConfiguration import SecurityConfiguration
 
@@ -36,6 +38,7 @@ class TokenManager(object):
     agolURL = None
     agolUser = None
     agolPassword = None
+    securityType = None
     securityConfiguration = None
     token = None
     admin = None
@@ -44,7 +47,11 @@ class TokenManager(object):
         self.agolURL = url
         self.agolUser = user
         self.agolPassword = pwd
-        sc = SecurityConfiguration(stype = securityType, url = url, user=user, pwd=pwd, referer=referer)
+        self.securityType = securityType
+        if securityType is not None and securityType == 'AGS':
+            sc = SecurityConfiguration(stype = securityType, url = url, user=user, pwd=pwd, referer=referer, proxy_url = None, proxy_port=None)
+        elif securityType is not None:
+            sc = SecurityConfiguration(stype = securityType, url = url, user=user, pwd=pwd, referer=referer)
         self.securityConfiguration = sc.securityConfig
 
     '''
@@ -53,22 +60,40 @@ class TokenManager(object):
     With agolURL, user, and password, requests and returns
     a token object.
 
+    See for refactoring ideas: http://anothergisblog.blogspot.com/2015/04/arcrest-basics-authentication.html
+
     RETURNS
     -------
     token object
 
     '''
     def getToken(self):
-        shh = securityhandlerhelper.securityhandlerhelper(self.securityConfiguration)
+        if self.securityType == 'AGS':
+            sh = arcrest.AGSTokenSecurityHandler(token_url=self.securityConfiguration['org_url'] + ':6443/arcgis/admin/generateToken'
+                    , username=self.securityConfiguration['username']
+                    , password=self.securityConfiguration['password'])
+                    #, proxy_url=self.securityConfiguration['proxy_url']
+                    #, proxy_port=self.securityConfiguration['proxy_port'])
+            ags = arcrest.ags.server.Server(url=self.securityConfiguration['org_url'].replace('https','http') + ':6080/arcgis'
+                    , securityHandler=sh)
 
-        if shh.valid == False:
-            print shh.message
-        else:
-            self.admin = arcrest.manageorg.Administration(url=self.agolURL, securityHandler=shh.securityhandler)
-            content = self.admin.content
-            userInfo = content.users.user()
+            if sh.valid == False:
+                print sh.message
+            else:
+                self.admin = ags
+                self.token = sh.token
 
-            self.token = shh.securityhandler.token
+        else: # security type == Portal or ArcGIS
+            shh = securityhandlerhelper.securityhandlerhelper(self.securityConfiguration)
+
+            if shh.valid == False:
+                print shh.message
+            else:
+                self.admin = arcrest.manageorg.Administration(url=self.agolURL, securityHandler=shh.securityhandler)
+                content = self.admin.content
+                userInfo = content.users.user()
+
+                self.token = shh.securityhandler.token
 
 
 if __name__=='__main__':
