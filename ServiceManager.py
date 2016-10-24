@@ -30,7 +30,7 @@ import urllib2
 import arcrest
 #import TokenManager
 from TokenManager import TokenManager
-#import ServiceConfiguration
+import ServiceConfiguration
 from ServiceConfiguration import ServiceConfiguration
 #import ServiceSource
 from ServiceSource import ServiceSource
@@ -43,7 +43,6 @@ class ServiceManager(object):
 
     '''
     token = None
-    #serviceConfiguration = None # this is itemParameters
     admin = None
 
     def __init__(self):
@@ -54,9 +53,14 @@ class ServiceManager(object):
         if self.admin == None:
             self.admin = tm.admin
 
-    def getConfiguration(self, itype, title, description, url=None):
-        sc = ServiceConfiguration(itype=itype, title=title, description=description, url=url)
-        #self.serviceConfiguration = sc.itemParams
+    def getConfiguration(self, itype, title, description, url=None, tags=None, snippet=None, accessInformation=None, metadata=None):
+        sc = ServiceConfiguration(itype=itype, title=title
+        , description=description
+        , url=url
+        , tags=tags
+        , snippet=snippet
+        , accessInformation=accessInformation
+        , metadata=metadata)
         return sc.itemParams
 
 if __name__=='__main__':
@@ -68,19 +72,26 @@ if __name__=='__main__':
     userInfo = content.users.user()
 
     ss = ServiceSource()
-    ss.agsConnection("https://inp2300fcvhafo1", "arcgis_admin", "admin2016...")
-    ss.sourceList = ss.getAGSSources(ss.agsServer, "Inventory_Geology")
+    # Data Store/ServCat example
+    ss.sourceFilter = ss.dsscConnection("GRI", "GeospatialDataset")
+    ss.sourceList = ss.getDSSCSources("http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=2000&format=json")
 
-    # TODO: iterate sourceList
-    itemParameters = sm.getConfiguration(itype="Map Service", title=ss.sourceList['serviceName'][0]
-                    , description=ss.sourceList['description'][0]
-                    , url=ss.sourceList['serviceURL'][0])
-    #itemParameters = sm.getConfiguration(itype="Map Service", title="IMD Test Service", description="Updated description", url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer")
-    #itemParameters = sm.serviceConfiguration
-    print str(itemParameters)
-    #url="http://irmaservices.nps.gov/arcgis/rest/services/Inventory_Geology/Digital_Geologic_Map_of_Long_Island_New_York/MapServer"
+    # ArcGIS Server example
+    #ss.agsConnection("https://inp2300fcvhafo1", "arcgis_admin", "admin2016...")
+    #ss.sourceList = ss.getAGSSources(ss.agsServer, "Inventory_Geology")
 
-    # This direct request works although the overwrite and folder params are ignored
-    item = userInfo.addItem(itemParameters=itemParameters, overwrite=True)
-    print item.title
+    # Metadata: may work if convert this to an XML object: , metadata="https://irma.nps.gov/DataStore/DownloadFile/544273"
+    for i in range(1, len(ss.sourceList['serviceName'])):
+        itemParameters = sm.getConfiguration(itype="Map Service"
+                    , title=ss.sourceList['serviceName'][i]
+                    , description=ss.sourceList['description'][i]
+                    , url=ss.sourceList['serviceURL'][i]
+                    , tags="National Park Service (NPS) Geologic Resources Inventory (GRI), Geology"
+                    , snippet="Digital Data, Digital Geologic Map"
+                    , accessInformation="National Park Service (NPS) Geologic Resources Inventory (GRI) program")
+        print str(itemParameters)
+
+        # This request works although the overwrite and folder params are ignored
+        item = userInfo.addItem(itemParameters=itemParameters, overwrite=True)
+        print item.title
 
