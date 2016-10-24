@@ -170,17 +170,33 @@ class ServiceSource(object):
 
     def getDSSCSources(self, sourceLocation):
         reqURL = sourceLocation
+        services = dict()
         # Request sources using filter
         print reqURL
-        print str(self.sourceFilter)
+        #print str(self.sourceFilter)
+
+        dsLink = '<br/><br/> National Park Service <a href="https://irma.nps.gov/DataStore/Reference/Profile/">Data Store</a> record.'
+        serviceNames = []
+        serviceDescriptions = []
+        serviceURLs = []
 
         data = json.dumps(self.sourceFilter)
         req = urllib2.Request(sourceLocation, data, {'Content-Type':'application/json'})
         resp = urllib2.urlopen(req)
         a = json.loads(resp.read())
-        print len(a['items'])
-        print [item['referenceId'] for item in a['items']]
-        return [item['referenceId'] for item in a['items']]
+        for item in a['items']:
+            serviceURL = [x for x in item['linkedResources'] if x['resourceType'] =='Web Service'][0]['url']
+            serviceName = 'IMD ' + serviceURL.split('/')[7].replace('_',' ')
+            serviceNames.append(serviceName)
+            serviceDescriptions.append(item['title'] + dsLink.replace('Profile/','Profile/'+ str(item['referenceId'])))
+            serviceURLs.append(serviceURL)
+
+        services['serviceName'] = serviceNames
+        services['description'] = serviceDescriptions
+        services['serviceURL'] = serviceURLs
+
+        print services
+        return services
 
 if __name__=='__main__':
     # Service source: AGS REST using arcrest security handler logic
@@ -193,4 +209,3 @@ if __name__=='__main__':
     ss = ServiceSource()
     ss.sourceFilter = ss.dsscConnection("GRI", "GeospatialDataset")
     sourceList = ss.getDSSCSources("http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=2000&format=json")
-    #ss = ServiceSource(sourceLocation="http://irmaservices.nps.gov/datastore/v4/rest/AdvancedSearch/Composite?top=1&format=json")
