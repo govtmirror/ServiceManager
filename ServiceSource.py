@@ -186,16 +186,16 @@ class ServiceSource(object):
         a = json.loads(resp.read())
         for item in a['items']:
             serviceURL = [x for x in item['linkedResources'] if x['resourceType'] =='Web Service'][0]['url']
-            serviceName = 'IMD ' + serviceURL.split('/')[7].replace('_',' ')
+            serviceName = 'IMD ' + (serviceURL.split('/')[7].replace('_',' '))
             serviceNames.append(serviceName)
-            serviceDescriptions.append(item['title'] + dsLink.replace('Profile/','Profile/'+ str(item['referenceId'])))
+            serviceDescriptions.append(item['title'].replace(u"\u2019", "'").replace(u"\x92", "'") + dsLink.replace('Profile/','Profile/'+ str(item['referenceId'])))
             serviceURLs.append(serviceURL)
 
         services['serviceName'] = serviceNames
         services['description'] = serviceDescriptions
         services['serviceURL'] = serviceURLs
 
-        print services
+        #print services
         return services
 
 if __name__=='__main__':

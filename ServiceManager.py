@@ -86,10 +86,12 @@ if __name__=='__main__':
                     , title=ss.sourceList['serviceName'][i]
                     , description=ss.sourceList['description'][i]
                     , url=ss.sourceList['serviceURL'][i]
+                    #, url=urllib.urlencode(ss.sourceList['serviceURL'][i])
                     , tags="National Park Service (NPS) Geologic Resources Inventory (GRI), Geology"
                     , snippet="Digital Data, Digital Geologic Map"
                     , accessInformation="National Park Service (NPS) Geologic Resources Inventory (GRI) program")
-        print str(itemParameters)
+        print ss.sourceList['serviceURL'][i]
+        #print str(itemParameters)
 
         # This request works although the overwrite and folder params are ignored
         item = userInfo.addItem(itemParameters=itemParameters, overwrite=True)
